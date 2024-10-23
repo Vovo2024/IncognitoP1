@@ -9,7 +9,8 @@
 
 
 typedef enum _couleur{BLANC, NOIR} Couleur ; 
-typedef enum _type{CHEVALIER, ESPION, CHATEAU} Type ;
+typedef enum _type{CHEVALIER, ESPION} Type ;
+
 // Définition de la taille du plateau
 typedef struct _pion {
     Type type;
@@ -22,11 +23,10 @@ typedef struct _jeu {
 } Jeu;
 
 
-
-
 typedef struct { 
     int x, y;
 } Case , Direction ;
+
 
 typedef struct _mouvement {
     Case depart;
@@ -92,9 +92,34 @@ void afficherPlateau(Jeu *jeu){
     
 }
 
+void recup_deplacement(Mouvement * mouv, Jeu * jeu){
+    do {
+        if (Pion.couleur == BLANC){
+            char c;
+            printf("Joueur blanc, voulez vous faire un déplacement ou une interrogation? ('d' ou 'i')");
+            scanf("%c", &c);
+            if (c == 'd'){
+                printf("Quel dépplacement joueur blanc ?\n Saisie sous la forme (a,b) --> (c,d)");
+                scanf("%d %d %d %d", &(Mouvement).Case depart.x), &(Mouvement->case depart->y), &(Mouvement->case arrivee->x), &(Mouvement->case arrivee->y));
+            } elif (c == 'i'){
+                printf("Quel pion blanc est l'interrogateur?\n Saisie sous la forme (a,b)");
+                scanf("(%d, %d)", &(Case.x), &(Case.y));
+                printf("Quel pion est quesitonné ?\n Saisie sous la forme (a,b)");
+                scanf("(%d, %d)", &(Case.x), &(Case.y));
+            }
+        }
+    
+}
+
+
+
+void Deplacements(Mouvement * mouv, Jeu * jeu){
+
+}
+
 int main (){
      Jeu jeu;
-    
+     Mouvement mouv;
     // Initialisation du plateau
     printf("Initialisation du plateau...\n");
     initPlateau(&jeu);
