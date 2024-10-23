@@ -96,52 +96,65 @@ void recup_deplacement(Mouvement * mvt, Jeu * jeu, Pion pion){
     char c;
     int game = 1;
     do {
-        if (pion.couleur == BLANC){
-            printf("Joueur blanc, voulez vous faire un déplacement ou une interrogation? ('d' ou 'i')");
+            printf("Joueur %s, voulez vous faire un déplacement ou une interrogation? ('d' ou 'i')",  (pion.couleur == BLANC) ? "blanc" : "noir");
             scanf(" %c", &c);
             if (c == 'd'){
-                printf("Quel dépplacement joueur blanc ?\n Saisie sous la forme (a,b) --> (c,d)");
+                printf("Quel dépplacement joueur %s ?\n Saisie sous la forme (a,b) --> (c,d)",  (pion.couleur == BLANC) ? "blanc" : "noir");
                 scanf("%d %d %d %d", &(mvt->depart.x), &(mvt->depart.y), &(mvt->arrivee.x), &(mvt->arrivee.y));
-            } else if (c == 'i') {
-                Case interroge, questionne;
-                printf("Quel pion blanc est l'interrogateur?\n Saisie sous la forme (a,b)");
-                scanf("%d %d", &(interroge.x), &(interroge.y));
-                printf("Quel pion est quesitonné ?\n Saisie sous la forme (a,b)");
-                scanf("%d %d", &(questionne.x), &(questionne.y));
+            } 
+            else if (c == 'i'){
+                interroge(mvt, jeu, pion);
             }
-        }
-        if (pion.couleur == NOIR){
-            printf("Joueur noir, voulez vous faire un déplacement ou une interrogation? ('d' ou 'i')");
-            scanf(" %c", &c);
-            if (c == 'd'){
-                printf("Quel dépplacement joueur noir ?\n Saisie sous la forme (a,b) --> (c,d)");
-                scanf("%d %d %d %d", &(mvt->depart.x), &(mvt->depart.y), &(mvt->arrivee.x), &(mvt->arrivee.y));
-            } else if (c == 'i') {
-                Case interroge, questionne;
-                printf("Quel pion noir est l'interrogateur?\n Saisie sous la forme (a,b)");
-                scanf("%d %d", &(interroge.x), &(interroge.y));
-                printf("Quel pion est quesitonné ?\n Saisie sous la forme (a,b)");
-                scanf("%d %d", &(questionne.x), &(questionne.y));
-            }
-        }
-     } while(game);
+    } while(game);
 }
 
-
-
 void Deplacements(Mouvement * mvt, Jeu * jeu){
+    int depart_x = mvt->depart.x;
+    int depart_y = mvt->depart.y;
+    int arrivee_x = mvt->arrivee.x;
+    int arrivee_y = mvt->arrivee.y
     if (position_valide){
-        if (jeu->plateau[mvt->depart.x][mvt->depart.y] != NULL && (jeu->plateau[mvt->depart.x][mvt->depart.y]->couleur == BLANC || jeu->plateau[mvt->depart.x][mvt->depart.y]->couleur == NOIR)) {
-            jeu->plateau[mvt->arrivee.x][mvt->arrivee.y] = jeu->plateau[mvt->depart.x][mvt->depart.y];
-            jeu->plateau[mvt->depart.x][mvt->depart.y] = NULL;
+        if (jeu->plateau[depart_x][depart_y] != NULL && (jeu->plateau[depart_x][depart_y]->couleur == BLANC || jeu->plateau[depart_x][depart_y]->couleur == NOIR)) {
+            jeu->plateau[arrivee_x][arrivee_y] = jeu->plateau[depart_x][depart_y];
+            jeu->plateau[depart_x][depart_y] = NULL;
+        }
+        else if (jeu->plateau[depart_x][depart_y]->type == ESPION && 
+                (arrivee_x == 0 || arrivee_x == 4) && 
+                (arrivee_y == 0 || arrivee_y == 4) && 
+                (arrivee_x != arrivee_y)) {
+                    gagne(pion.couleur);
         }
     }
 }
 
-int main (){
+void interroge(Mouvement * mvt, Jeu * jeu, Pion pion){
+    Case interroge, questionne;
+    printf("Quel pion %s est l'interrogateur?\n Saisie sous la forme (a,b)", (pion.couleur == BLANC) ? "blanc" : "noir");
+    scanf("%d %d", &(interroge.x), &(interroge.y));
+    printf("Quel pion est quesitonné ?\n Saisie sous la forme (a,b)");
+    scanf("%d %d", &(questionne.x), &(questionne.y));
+    Pion interrogeP = *jeu->plateau[interroge.x][interroge.y];
+    Pion questionneP = *jeu->plateau[questionne.x][questionne.y];
+    if (interrogeP.type == ESPION){
+        if (questionneP.type != ESPION){
+            printf("Joueur %s, vous avez interrogé un chevalier avec votre espion...\n", (pion.couleur == BLANC) ? "blanc" : "noir");
+            gagne(pion.couleur, questionneP);
+        }
+    }else if (questionneP.type == ESPION){
+        printf("Joueur %s, vous avez démasqué l'espion adverse.", (pion.couleur == BLANC) ? "blanc" : "noir"); 
+        gagne(pion.couleur, interrogeP); 
+    }   
+}
+
+void gagne(Couleur couleur, Pion pion){
+    printf("Le gagnant est le joueur %s : BRAVO !", (pion.couleur == BLANC) ? "blanc" : "noir");
+}
+
+int main() {
      Jeu jeu;
      Mouvement mvt;
-
+     Pion pion_noir = {CHEVALIER, NOIR};
+     Pion pion_blanc = {CHEVALIER, BLANC};
     // Initialisation du plateau
     printf("Initialisation du plateau...\n");
     initPlateau(&jeu);
