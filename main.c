@@ -92,34 +92,56 @@ void afficherPlateau(Jeu *jeu){
     
 }
 
-void recup_deplacement(Mouvement * mouv, Jeu * jeu){
+void recup_deplacement(Mouvement * mvt, Jeu * jeu, Pion pion){
+    char c;
+    int game = 1;
     do {
-        if (Pion.couleur == BLANC){
-            char c;
+        if (pion.couleur == BLANC){
             printf("Joueur blanc, voulez vous faire un déplacement ou une interrogation? ('d' ou 'i')");
-            scanf("%c", &c);
+            scanf(" %c", &c);
             if (c == 'd'){
                 printf("Quel dépplacement joueur blanc ?\n Saisie sous la forme (a,b) --> (c,d)");
-                scanf("%d %d %d %d", &(Mouvement).Case depart.x), &(Mouvement->case depart->y), &(Mouvement->case arrivee->x), &(Mouvement->case arrivee->y));
-            } elif (c == 'i'){
+                scanf("%d %d %d %d", &(mvt->depart.x), &(mvt->depart.y), &(mvt->arrivee.x), &(mvt->arrivee.y));
+            } else if (c == 'i') {
+                Case interroge, questionne;
                 printf("Quel pion blanc est l'interrogateur?\n Saisie sous la forme (a,b)");
-                scanf("(%d, %d)", &(Case.x), &(Case.y));
+                scanf("%d %d", &(interroge.x), &(interroge.y));
                 printf("Quel pion est quesitonné ?\n Saisie sous la forme (a,b)");
-                scanf("(%d, %d)", &(Case.x), &(Case.y));
+                scanf("%d %d", &(questionne.x), &(questionne.y));
             }
         }
-    
+        if (pion.couleur == NOIR){
+            printf("Joueur noir, voulez vous faire un déplacement ou une interrogation? ('d' ou 'i')");
+            scanf(" %c", &c);
+            if (c == 'd'){
+                printf("Quel dépplacement joueur noir ?\n Saisie sous la forme (a,b) --> (c,d)");
+                scanf("%d %d %d %d", &(mvt->depart.x), &(mvt->depart.y), &(mvt->arrivee.x), &(mvt->arrivee.y));
+            } else if (c == 'i') {
+                Case interroge, questionne;
+                printf("Quel pion noir est l'interrogateur?\n Saisie sous la forme (a,b)");
+                scanf("%d %d", &(interroge.x), &(interroge.y));
+                printf("Quel pion est quesitonné ?\n Saisie sous la forme (a,b)");
+                scanf("%d %d", &(questionne.x), &(questionne.y));
+            }
+        }
+     } while(game);
 }
 
 
 
-void Deplacements(Mouvement * mouv, Jeu * jeu){
-
+void Deplacements(Mouvement * mvt, Jeu * jeu){
+    if (position_valide){
+        if (jeu->plateau[mvt->depart.x][mvt->depart.y] != NULL && (jeu->plateau[mvt->depart.x][mvt->depart.y]->couleur == BLANC || jeu->plateau[mvt->depart.x][mvt->depart.y]->couleur == NOIR)) {
+            jeu->plateau[mvt->arrivee.x][mvt->arrivee.y] = jeu->plateau[mvt->depart.x][mvt->depart.y];
+            jeu->plateau[mvt->depart.x][mvt->depart.y] = NULL;
+        }
+    }
 }
 
 int main (){
      Jeu jeu;
-     Mouvement mouv;
+     Mouvement mvt;
+
     // Initialisation du plateau
     printf("Initialisation du plateau...\n");
     initPlateau(&jeu);
