@@ -1,15 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-
-
+#include <time.h>
 
 #define TAILLE 5
 
 
 
 typedef enum _couleur{BLANC, NOIR} Couleur ; 
-typedef enum _type{CHEVALIER, ESPION} Type ;
+typedef enum _type{CHEVALIER, ESPION, CHATEAU} Type ;
 
 // Définition de la taille du plateau
 typedef struct _pion {
@@ -34,11 +32,6 @@ typedef struct _mouvement {
 }Mouvement;
 
 //----------Prototypes des fonctions----------//
-
-//Fonction pour tracer la grille du jeu 
-void traceGrille();
-
-//Fonction pour 
 
 
 void initPlateau(Jeu  *jeu){
@@ -83,7 +76,7 @@ void initPlateau(Jeu  *jeu){
     if (jeu->plateau[0][TAILLE - 1] == NULL) {
         jeu->plateau[0][TAILLE - 1] = (Pion*)malloc(sizeof(Pion));
     }
-    jeu->plateau[0][TAILLE - 1]->type = CHATEAU;
+    jeu->plateau[0][TAILLE - 1]->type = CHATEAU; //définir les couleurs des chateaux
 
     if (jeu->plateau[TAILLE - 1][0] == NULL) {
         jeu->plateau[TAILLE - 1][0] = (Pion*)malloc(sizeof(Pion));
@@ -114,6 +107,8 @@ void afficherPlateau(Jeu *jeu){
     }
 }
 
+//int chacun_son_tour()
+
 int coup_valide(Jeu *jeu, Mouvement *mvt) {
     Case depart = mvt->depart;
     Case arrivee = mvt->arrivee;
@@ -138,6 +133,7 @@ int coup_valide(Jeu *jeu, Mouvement *mvt) {
     Pion *pion_arrivee = jeu->plateau[arrivee.x][arrivee.y];
 
     if (pion_arrivee != NULL && pion_arrivee->couleur == pion_depart->couleur) {
+        printf("Joueur %s tu as déjà un pion à cet endroit, choisis une autre position.", (pion_depart->couleur == BLANC) ? "blanc" : "noir");
         return 0;  // 
     }
 
@@ -150,20 +146,15 @@ int coup_valide(Jeu *jeu, Mouvement *mvt) {
         return 0;  // Le mouvement n'est ni droit ni diagonal
     }
 
-    // 6. Vérifier si le chemin est libre (sans pièces entre la case de départ et d'arrivée)
+    // Vérifier si le chemin est libre (sans pièces entre la case de départ et d'arrivée)
     int pas_x = (dx != 0) ? dx / abs(dx) : 0;  // Pas pour avancer en x (0 si pas de mouvement horizontal)
     int pas_y = (dy != 0) ? dy / abs(dy) : 0;  // Pas pour avancer en y (0 si pas de mouvement vertical)
 
-    int x = depart.x + pas_x;
-    int y = depart.y + pas_y;
-
     // Parcourir les cases intermédiaires
-    while (x != arrivee.x || y != arrivee.y) {
+    for (int x = depart.x + pas_x, y = depart.y + pas_y; x != arrivee.x || y != arrivee.y;  x += pas_x, y += pas_y) {
         if (jeu->plateau[x][y] != NULL) {  // Il y a une pièce sur le chemin
             return 0;  // Le chemin est bloqué
         }
-        x += pas_x;
-        y += pas_y;
     }
 
     // Si toutes les conditions sont satisfaites, le coup est valide
@@ -199,7 +190,7 @@ void testerPlateau(Jeu *jeu) {
                         break;
                     case NOIR:
                         printf("noir\n");
-                        break;
+                        break;s
                     default:
                         printf("couleur inconnue\n");
                         break;
@@ -230,12 +221,26 @@ void afficherDetailsPions(Jeu* jeu) {
             }
         }
     }
+}
 
-void recup_deplacement(Mouvement * mvt, Jeu * jeu, Pion pion){ //REVOIR LE NOM DE LA FCT
-    //Fonction qui récupère les saisies de l'utilisateur pour déplacer un pion ou l'interroger
-    //besoin de verif que les positions de depart et d'arrivee sont valides ??
+int espionEntreDansChateau(Mouvement *mvt, Pion *pion) {
+    int arrivee_x = mvt->arrivee.x;
+    int arrivee_y = mvt->arrivee.y;
+
+    // Vérifiez si le pion est un espion
+    if (pion->type == ESPION) {
+        // Vérifiez si l'espion arrive dans le château adverse
+        if ((arrivee_x == 0 && arrivee_y == 4) ||  // Château blanc
+            (arrivee_x == 4 && arrivee_y == 0)) { // Château noir
+            return 1;  // Victoire
+        }
+    }
+    return 0;  // Pas de victoire
+}
+
+//Fonction qui récupère les saisies de l'utilisateur pour déplacer un pion ou l'interroger
+void recup_saisies(Mouvement * mvt, Jeu * jeu, Pion pion){
     char c;
-    int game = 1;
     do {
             printf("Joueur %s, voulez vous faire un déplacement ou une interrogation? ('d' ou 'i')",  (pion.couleur == BLANC) ? "blanc" : "noir");
             scanf(" %c", &c);
@@ -250,30 +255,34 @@ void recup_deplacement(Mouvement * mvt, Jeu * jeu, Pion pion){ //REVOIR LE NOM D
     } while(coup_valide);
 }
 
-void Deplacements(Mouvement * mvt, Jeu * jeu){
-    //Fonction qui déplace les pions
+//Fonction qui déplace les pions
+void Deplacements(Mouvement * mvt, Jeu * jeu, Pion pion){
     int depart_x = mvt->depart.x;
     int depart_y = mvt->depart.y;
     int arrivee_x = mvt->arrivee.x;
-    int arrivee_y = mvt->arrivee.y
+    int arrivee_y = mvt->arrivee.y;
     if (coup_valide){
+        //la valeur d'arrivée devient celle de départ -> le pion est déplacé, et la valeur de départ est réinitialisée à NULL
         if (jeu->plateau[depart_x][depart_y] != NULL && (jeu->plateau[depart_x][depart_y]->couleur == BLANC || jeu->plateau[depart_x][depart_y]->couleur == NOIR)) {
-            //la valeur d'arrivée devient celle de départ -> le pion est déplacé, et la valeur de départ est réinitialisée à NULL
             jeu->plateau[arrivee_x][arrivee_y] = jeu->plateau[depart_x][depart_y];
             jeu->plateau[depart_x][depart_y] = NULL;
         }
+        //si un espion entre dans le chateau adverse, la partie est gagnée
         else if (jeu->plateau[depart_x][depart_y]->type == ESPION && //condition à ajt : ESPION ENTRE DANS CHATEAU ADVERSE!! 
                 (arrivee_x == 0 || arrivee_x == 4) && 
                 (arrivee_y == 0 || arrivee_y == 4) && 
                 (arrivee_x != arrivee_y)) {
-                //si un espion entre dans le chateau adverse, la partie est gagnée
-                    gagne(pion.couleur);
+                    gagne(pion.couleur, pion);
+        }
+        else if (espionEntreDansChateau(mvt, &jeu->plateau[arrivee_x][arrivee_y])) {
+            gagne(pion.couleur);  // Appeler la fonction pour annoncer le gagnant
         }
     }
 }
 
 //Fonction qui questionne le pion designé
-void interroge(Mouvement * mvt, Jeu * jeu, Pion pion){ //verif aussi s'il y a un pion à la position désignée ?
+void interroge(Mouvement * mvt, Jeu * jeu, Pion pion){ 
+    //verif aussi s'il y a un pion à la position désignée ?
     Case interroge, questionne;
     //demande du pion interrogateur
     printf("Quel pion %s est l'interrogateur?\n Saisie sous la forme (a,b)", (pion.couleur == BLANC) ? "blanc" : "noir");
@@ -314,6 +323,17 @@ int main() {
     // Affichage du plateau
     printf("Affichage du plateau :\n");
     afficherPlateau(&jeu);
-    
-    return 1;
+
+    while (1){
+        afficherPlateau(&jeu);
+        recup_saisies(&mvt, &jeu, pion.couleur);
+        if (coup_valide(&jeu, &mvt)){
+             Deplacements(&mvt, &jeu, pion.couleur);
+        } else {
+            printf("Position non licite, veuillez réessayer.");
+            continue;
+        }
+        jeu.joueur = (jeu.joueur == BLANC) ? NOIR : BLANC;
+    }
+    return 0;
 }
