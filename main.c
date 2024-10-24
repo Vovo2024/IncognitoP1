@@ -42,6 +42,14 @@ void traceGrille();
 
 
 void initPlateau(Jeu  *jeu){
+    srand(time(NULL));
+
+    int i_espion_noir = rand() % TAILLE;
+    int i_espion_blanc = rand() % (TAILLE - 2) + 2;
+
+    int j_espion_noir = rand() % TAILLE;
+    int j_espion_blanc = rand() % (TAILLE - 2) + 2;
+
     //Fonction pour initialiser le plateau avec les positions initiales des pions
     for (int i = 0; i < TAILLE; i++) {
         for (int j = 0; j < TAILLE; j++) {
@@ -65,12 +73,24 @@ void initPlateau(Jeu  *jeu){
             jeu->plateau[i][j]->couleur = BLANC;
         }
     }
+    
+    jeu->plateau[i_espion_blanc][j_espion_blanc]->type = ESPION;
+    jeu->plateau[i_espion_blanc][j_espion_blanc]->couleur = BLANC;
+    jeu->plateau[i_espion_noir][j_espion_noir]->type = ESPION;
+    jeu->plateau[i_espion_noir][j_espion_noir]->couleur = NOIR;
+
+    // init Des chateaux dans les coins
+    if (jeu->plateau[0][TAILLE - 1] == NULL) {
+        jeu->plateau[0][TAILLE - 1] = (Pion*)malloc(sizeof(Pion));
+    }
+    jeu->plateau[0][TAILLE - 1]->type = CHATEAU;
+
+    if (jeu->plateau[TAILLE - 1][0] == NULL) {
+        jeu->plateau[TAILLE - 1][0] = (Pion*)malloc(sizeof(Pion));
+    }
     jeu->plateau[0][TAILLE-1] = NULL;
     jeu->plateau[TAILLE-1][0] = NULL;
 }
-  //jeu->plateau[0][TAILLE-1]->type = CHATEAU;
-  //jeu->plateau[TAILLE-1][0]->type = CHATEAU;
-
 
 void afficherPlateau(Jeu *jeu){
     //Fonction qui affiche le plateau dans le terminal
@@ -80,7 +100,9 @@ void afficherPlateau(Jeu *jeu){
             if(jeu->plateau[i][j] == NULL){
                 printf("| ");
             }
-            else if(jeu->plateau[i][j]->couleur == BLANC){
+            else if(jeu->plateau[i][j]->type == CHATEAU) {
+                printf("|*");
+            } else if(jeu->plateau[i][j]->couleur == BLANC){
                 printf("|b");
             }
             else if(jeu->plateau[i][j]->couleur == NOIR){
@@ -91,6 +113,123 @@ void afficherPlateau(Jeu *jeu){
         printf("|\n");
     }
 }
+
+int coup_valide(Jeu *jeu, Mouvement *mvt) {
+    Case depart = mvt->depart;
+    Case arrivee = mvt->arrivee;
+
+    // Vérifier si la case de départ contient un pion
+    if (jeu->plateau[depart.x][depart.y] == NULL) {
+        return 0;  // Pas de pion à déplacer
+    }
+
+    // Vérifier que la destination est dans les limites du plateau
+    if (arrivee.x < 0 || arrivee.x >= TAILLE || arrivee.y < 0 || arrivee.y >= TAILLE) {
+        return 0;  // La destination est en dehors du plateau
+    }
+
+    // Vérifier si la destination est différente de la case de départ
+    if (depart.x == arrivee.x && depart.y == arrivee.y) {
+        return 0;  // Pas de déplacement
+    }
+
+    // Vérifier si la case d'arrivée est occupée par une pièce du même camp
+    Pion *pion_depart = jeu->plateau[depart.x][depart.y];
+    Pion *pion_arrivee = jeu->plateau[arrivee.x][arrivee.y];
+
+    if (pion_arrivee != NULL && pion_arrivee->couleur == pion_depart->couleur) {
+        return 0;  // 
+    }
+
+    // direction du mouvement
+    int dx = arrivee.x - depart.x;
+    int dy = arrivee.y - depart.y;
+
+    // Vérifier que le déplacement est bien dans une direction droite ou diagonale
+    if (dx != 0 && dy != 0 && abs(dx) != abs(dy)) {
+        return 0;  // Le mouvement n'est ni droit ni diagonal
+    }
+
+    // 6. Vérifier si le chemin est libre (sans pièces entre la case de départ et d'arrivée)
+    int pas_x = (dx != 0) ? dx / abs(dx) : 0;  // Pas pour avancer en x (0 si pas de mouvement horizontal)
+    int pas_y = (dy != 0) ? dy / abs(dy) : 0;  // Pas pour avancer en y (0 si pas de mouvement vertical)
+
+    int x = depart.x + pas_x;
+    int y = depart.y + pas_y;
+
+    // Parcourir les cases intermédiaires
+    while (x != arrivee.x || y != arrivee.y) {
+        if (jeu->plateau[x][y] != NULL) {  // Il y a une pièce sur le chemin
+            return 0;  // Le chemin est bloqué
+        }
+        x += pas_x;
+        y += pas_y;
+    }
+
+    // Si toutes les conditions sont satisfaites, le coup est valide
+
+    return 1;
+}
+
+// Fonction pour tester le type de chaque pion dans le plateau
+void testerPlateau(Jeu *jeu) {
+    for (int i = 0; i < TAILLE; i++) {
+        for (int j = 0; j < TAILLE; j++) {
+            Pion *pion = jeu->plateau[i][j];
+            if (pion == NULL) {
+                printf("Position (%d, %d) : Case vide\n", i, j);
+            } else {
+                printf("Position (%d, %d) : ", i, j);
+                // Tester le type du pion
+                switch (pion->type) {
+                    case CHEVALIER:
+                        printf("Chevalier ");
+                        break;
+                    case ESPION:
+                        printf("Espion ");
+                        break;
+                    default:
+                        printf("Inconnu ");
+                        break;
+                }
+                // Tester la couleur du pion
+                switch (pion->couleur) {
+                    case BLANC:
+                        printf("blanc\n");
+                        break;
+                    case NOIR:
+                        printf("noir\n");
+                        break;
+                    default:
+                        printf("couleur inconnue\n");
+                        break;
+                }
+            }
+        }
+    }
+}
+
+void afficherDetailsPions(Jeu* jeu) {
+    for (int i = 0; i < TAILLE; i++) {
+        for (int j = 0; j < TAILLE; j++) {
+            printf("Case (%d, %d) : ", i, j);
+            if (jeu->plateau[i][j] == NULL) {
+                printf("Vide\n");
+            } else {
+                if (jeu->plateau[i][j]->type == CHEVALIER) {
+                    printf("Type = CHEVALIER, ");
+                } else if (jeu->plateau[i][j]->type == ESPION) {
+                    printf("Type = ESPION, ");
+                }
+
+                if (jeu->plateau[i][j]->couleur == BLANC) {
+                    printf("Couleur = BLANC\n");
+                } else if (jeu->plateau[i][j]->couleur == NOIR) {
+                    printf("Couleur = NOIR\n");
+                }
+            }
+        }
+    }
 
 void recup_deplacement(Mouvement * mvt, Jeu * jeu, Pion pion){ //REVOIR LE NOM DE LA FCT
     //Fonction qui récupère les saisies de l'utilisateur pour déplacer un pion ou l'interroger
@@ -117,7 +256,7 @@ void Deplacements(Mouvement * mvt, Jeu * jeu){
     int depart_y = mvt->depart.y;
     int arrivee_x = mvt->arrivee.x;
     int arrivee_y = mvt->arrivee.y
-    if (position_valide){
+    if (coups_valide){
         if (jeu->plateau[depart_x][depart_y] != NULL && (jeu->plateau[depart_x][depart_y]->couleur == BLANC || jeu->plateau[depart_x][depart_y]->couleur == NOIR)) {
             //la valeur d'arrivée devient celle de départ -> le pion est déplacé, et la valeur de départ est réinitialisée à NULL
             jeu->plateau[arrivee_x][arrivee_y] = jeu->plateau[depart_x][depart_y];
