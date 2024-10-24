@@ -247,7 +247,7 @@ void recup_deplacement(Mouvement * mvt, Jeu * jeu, Pion pion){ //REVOIR LE NOM D
             else if (c == 'i'){
                 interroge(mvt, jeu, pion);
             }
-    } while(game); //!! trouver condition pour game = 0, boucle dans main ?
+    } while(coup_valide);
 }
 
 void Deplacements(Mouvement * mvt, Jeu * jeu){
@@ -256,7 +256,7 @@ void Deplacements(Mouvement * mvt, Jeu * jeu){
     int depart_y = mvt->depart.y;
     int arrivee_x = mvt->arrivee.x;
     int arrivee_y = mvt->arrivee.y
-    if (coups_valide){
+    if (coup_valide){
         if (jeu->plateau[depart_x][depart_y] != NULL && (jeu->plateau[depart_x][depart_y]->couleur == BLANC || jeu->plateau[depart_x][depart_y]->couleur == NOIR)) {
             //la valeur d'arrivée devient celle de départ -> le pion est déplacé, et la valeur de départ est réinitialisée à NULL
             jeu->plateau[arrivee_x][arrivee_y] = jeu->plateau[depart_x][depart_y];
@@ -272,8 +272,8 @@ void Deplacements(Mouvement * mvt, Jeu * jeu){
     }
 }
 
+//Fonction qui questionne le pion designé
 void interroge(Mouvement * mvt, Jeu * jeu, Pion pion){ //verif aussi s'il y a un pion à la position désignée ?
-    //Fonction qui questionne le pion designé
     Case interroge, questionne;
     //demande du pion interrogateur
     printf("Quel pion %s est l'interrogateur?\n Saisie sous la forme (a,b)", (pion.couleur == BLANC) ? "blanc" : "noir");
@@ -283,15 +283,15 @@ void interroge(Mouvement * mvt, Jeu * jeu, Pion pion){ //verif aussi s'il y a un
     scanf("%d %d", &(questionne.x), &(questionne.y));
     Pion interrogeP = *jeu->plateau[interroge.x][interroge.y]; //récupère le type et la couleur du pion qui interroge
     Pion questionneP = *jeu->plateau[questionne.x][questionne.y]; //récupère le type et la couleur du pion questionné
+    //vérifie si le pion qui interroge est l'espion
     if (interrogeP.type == ESPION){
-        //vérifie si le pion qui interroge est l'espion
+        //vérifie si le pion questionné n'est pas l'espion
         if (questionneP.type != ESPION){
-            //vérifie si le pion questionné n'est pas l'espion
             printf("Joueur %s, vous avez interrogé un chevalier avec votre espion...\n", (pion.couleur == BLANC) ? "blanc" : "noir");
             gagne(pion.couleur, questionneP);
         }
-    }else if (questionneP.type == ESPION){
-        //vérifie si le pion questionné est l'espion
+    //vérifie si le pion questionné est l'espion
+    } else if (questionneP.type == ESPION){
         printf("Joueur %s, vous avez démasqué l'espion adverse.", (pion.couleur == BLANC) ? "blanc" : "noir"); 
         gagne(pion.couleur, interrogeP); 
     }   
