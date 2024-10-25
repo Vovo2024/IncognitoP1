@@ -9,7 +9,7 @@
 
 
 typedef enum _couleur{BLANC, NOIR} Couleur ; 
-typedef enum _type{CHEVALIER, ESPION} Type ;
+typedef enum _type{CHEVALIER, ESPION, CHATEAU} Type ;
 
 // Définition de la taille du plateau
 typedef struct _pion {
@@ -35,12 +35,7 @@ typedef struct _mouvement {
 
 //----------Prototypes des fonctions----------//
 
-//Fonction pour tracer la grille du jeu 
-void traceGrille();
-
-//Fonction pour 
-
-
+//Fonction pour init
 void initPlateau(Jeu  *jeu){
     srand(time(NULL));
 
@@ -231,9 +226,8 @@ void afficherDetailsPions(Jeu* jeu) {
         }
     }
 
-void recup_deplacement(Mouvement * mvt, Jeu * jeu, Pion pion){ //REVOIR LE NOM DE LA FCT
-    //Fonction qui récupère les saisies de l'utilisateur pour déplacer un pion ou l'interroger
-    //besoin de verif que les positions de depart et d'arrivee sont valides ??
+ //Fonction qui récupère les saisies de l'utilisateur pour déplacer un pion ou l'interroger
+void recup_saisies(Mouvement * mvt, Jeu * jeu, Pion pion){
     char c;
     int game = 1;
     do {
@@ -250,23 +244,23 @@ void recup_deplacement(Mouvement * mvt, Jeu * jeu, Pion pion){ //REVOIR LE NOM D
     } while(coup_valide);
 }
 
+//Fonction qui déplace les pions
 void Deplacements(Mouvement * mvt, Jeu * jeu){
-    //Fonction qui déplace les pions
     int depart_x = mvt->depart.x;
     int depart_y = mvt->depart.y;
     int arrivee_x = mvt->arrivee.x;
     int arrivee_y = mvt->arrivee.y
     if (coup_valide){
+        //la valeur d'arrivée devient celle de départ -> le pion est déplacé, et la valeur de départ est réinitialisée à NULL
         if (jeu->plateau[depart_x][depart_y] != NULL && (jeu->plateau[depart_x][depart_y]->couleur == BLANC || jeu->plateau[depart_x][depart_y]->couleur == NOIR)) {
-            //la valeur d'arrivée devient celle de départ -> le pion est déplacé, et la valeur de départ est réinitialisée à NULL
             jeu->plateau[arrivee_x][arrivee_y] = jeu->plateau[depart_x][depart_y];
             jeu->plateau[depart_x][depart_y] = NULL;
         }
+        //si un espion entre dans le chateau adverse, la partie est gagnée
         else if (jeu->plateau[depart_x][depart_y]->type == ESPION && //condition à ajt : ESPION ENTRE DANS CHATEAU ADVERSE!! 
                 (arrivee_x == 0 || arrivee_x == 4) && 
                 (arrivee_y == 0 || arrivee_y == 4) && 
                 (arrivee_x != arrivee_y)) {
-                //si un espion entre dans le chateau adverse, la partie est gagnée
                     gagne(pion.couleur);
         }
     }
