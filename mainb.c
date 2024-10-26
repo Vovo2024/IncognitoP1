@@ -6,7 +6,6 @@
 
 
 
-
 typedef enum _couleur{BLANC, NOIR} Couleur ; 
 typedef enum _type{CHEVALIER, ESPION, CHATEAU} Type ;
 
@@ -32,31 +31,23 @@ typedef struct _mouvement {
     Case arrivee ; 
 }Mouvement;
 
-typedef struct {//structure pour les couple (i,j)=> position des espions
-    int i;
-    int j;
-} PosEspion;
+//----------Prototypes des fonctions----------//
+void gagne(Couleur couleur, Pion pion);
+void interroge(Mouvement *mvt, Jeu *jeu, Pion pion);
+void initPlateau(Jeu *jeu);
+int coup_valide(Jeu *jeu, Mouvement *mvt);
+void Deplacements(Mouvement *mvt, Jeu *jeu, Pion *pion);
 
-PosEspion positions_valides[] = {//Declaration de la liste des posValides des espions 
-    {1, 2},
-    {3, 0},
-    {3, 1},
-    {4, 1},
-    {4, 2}
-};
-
-// Fonction pour obtenir une position valide aléatoire pour un espion
-PosEspion obtenir_position_valide() {
-    int i = rand() % 5;
-    return positions_valides[i];
-}
-
-
-//Fonction pour initialiser le plateau avec les positions initiales des pions
-void initChevalier(Jeu  *jeu){
+void initPlateau(Jeu  *jeu){
     srand(time(NULL));
-    printf("TEST 1 OK\n");
 
+    int i_espion_noir = rand() % TAILLE;
+    int i_espion_blanc = rand() % (TAILLE - 2) + 2;
+
+    int j_espion_noir = rand() % TAILLE;
+    int j_espion_blanc = rand() % (TAILLE - 2) + 2;
+
+    //Fonction pour initialiser le plateau avec les positions initiales des pions
     for (int i = 0; i < TAILLE; i++) {
         for (int j = 0; j < TAILLE; j++) {
          //initialise le plateau avec des NULL dans toutes les cases
@@ -79,65 +70,50 @@ void initChevalier(Jeu  *jeu){
             jeu->plateau[i][j]->couleur = BLANC;
         }
     }
-    printf("OK");
-}
-void initEspion(Jeu *jeu){
-    PosEspion pos_Espion_b = obtenir_position_valide();
-    PosEspion pos_Espion_n = {pos_Espion_b.j, pos_Espion_b.i};
+    
+    jeu->plateau[i_espion_blanc][j_espion_blanc] = (Pion *)malloc(sizeof(Pion));
+    jeu->plateau[i_espion_blanc][j_espion_blanc]->type = ESPION;
+    jeu->plateau[i_espion_blanc][j_espion_blanc]->couleur = BLANC;
 
-    if(jeu->plateau[pos_Espion_b.i][pos_Espion_b.j] == NULL){
-        jeu->plateau[pos_Espion_b.i][pos_Espion_b.j] = (Pion *)malloc(sizeof(Pion)); 
+    jeu->plateau[i_espion_noir][j_espion_noir] = (Pion *)malloc(sizeof(Pion));
+    jeu->plateau[i_espion_noir][j_espion_noir]->type = ESPION;
+    jeu->plateau[i_espion_noir][j_espion_noir]->couleur = NOIR;
+
+    // init Des chateaux dans les coins
+    if (jeu->plateau[0][TAILLE - 1] == NULL) {
+        jeu->plateau[0][TAILLE - 1] = (Pion*)malloc(sizeof(Pion));
     }
-    if(jeu->plateau[pos_Espion_n.i][pos_Espion_n.j] == NULL){
-        jeu->plateau[pos_Espion_n.i][pos_Espion_n.j] = (Pion *)malloc(sizeof(Pion)); 
+    jeu->plateau[0][TAILLE - 1]->type = CHATEAU; //définir les couleurs des chateaux
+
+    if (jeu->plateau[TAILLE - 1][0] == NULL) {
+        jeu->plateau[TAILLE - 1][0] = (Pion*)malloc(sizeof(Pion));
     }
-    jeu->plateau[pos_Espion_b.i][pos_Espion_b.j]->type = ESPION;
-    jeu->plateau[pos_Espion_b.i][pos_Espion_b.j]->couleur = BLANC;
+    /*    
+    jeu->plateau[0][TAILLE - 1] = (Pion *)malloc(sizeof(Pion));
+    jeu->plateau[0][TAILLE - 1]->type = CHATEAU;
+    jeu->plateau[0][TAILLE - 1]->couleur = BLANC;
 
-    jeu->plateau[pos_Espion_n.i][pos_Espion_n.j]->type = ESPION;
-    jeu->plateau[pos_Espion_n.i][pos_Espion_n.j]->couleur = NOIR;
-
-
-}
-void initChateau(Jeu *jeu){
-
-    if(jeu->plateau[0][TAILLE - 1] != NULL){//INIT CHATEAU BLANC
-        jeu->plateau[TAILLE - 1][0] = (Pion *)malloc(sizeof(Pion));
-        jeu->plateau[TAILLE - 1][0]-> type = CHATEAU;
-        jeu->plateau[TAILLE - 1][0]-> couleur = BLANC;
-    }
-
-    if(jeu->plateau[0][TAILLE - 1] != NULL){//INIT CHATEAU NOIR
-        jeu->plateau[0][TAILLE - 1] = (Pion *)malloc(sizeof(Pion));
-        jeu->plateau[0][TAILLE - 1]-> type = CHATEAU;
-        jeu->plateau[0][TAILLE - 1]-> couleur = NOIR;
-    }
-}
-
-
-void initPlateau(Jeu *jeu){
-    initChevalier(jeu);  // Pas besoin de &jeu
-    initEspion(jeu);     // Pas besoin de &jeu
-    initChateau(jeu);    // Pas besoin de &jeu
+    jeu->plateau[TAILLE - 1][0] = (Pion *)malloc(sizeof(Pion));
+    jeu->plateau[TAILLE - 1][0]->type = CHATEAU;
+    jeu->plateau[TAILLE - 1][0]->couleur = NOIR;
+    */
 }
 
 void afficherPlateau(Jeu *jeu){
     //Fonction qui affiche le plateau dans le terminal
-    for(int i = 0; i < TAILLE ; i++){
+    for(int i = 0; i < TAILLE+1 ; i++){
         printf("-----------\n");
         for(int j = 0; j < TAILLE ; j++){
-
-            if(jeu->plateau[i][j] == NULL){//case vide
+            if(jeu->plateau[i][j] == NULL){
                 printf("| ");
             }
-            else if(jeu->plateau[i][j]->type == CHATEAU) {//case chateau
-                printf("|C");
-            }else if(jeu->plateau[i][j]->couleur == BLANC &&  jeu->plateau[i][j]->type == CHEVALIER){//case pion blanc
+            else if(jeu->plateau[i][j]->type == CHATEAU) {
+                printf("|*");
+            } else if(jeu->plateau[i][j]->couleur == BLANC){
                 printf("|b");
-            }else if(jeu->plateau[i][j]->couleur == NOIR && jeu->plateau[i][j]->type == CHEVALIER){//case pion noir
+            }
+            else if(jeu->plateau[i][j]->couleur == NOIR){
                 printf("|n");
-            }else if(jeu->plateau[i][j]->type == ESPION) {//case espion
-                printf("|e");
             }
             
         }
@@ -260,39 +236,6 @@ void testerPlateau(Jeu *jeu) {
     }
 }*/
 
-
-void gagne(Couleur couleur, Pion pion){
-    //Fonction qui donne la phrase lorsqu'un joueur gagne
-    printf("Le gagnant est le joueur %s : BRAVO !", (pion.couleur == BLANC) ? "blanc" : "noir");
-}
-
-//Fonction qui questionne le pion designé
-void interroge(Mouvement * mvt, Jeu * jeu, Pion pion){ 
-    do {
-        Case interroge, questionne;
-        //demande du pion interrogateur
-        printf("Quel pion %s est l'interrogateur?\n Saisie sous la forme (a,b)", (pion.couleur == BLANC) ? "blanc" : "noir");
-        scanf("%d %d", &(interroge.x), &(interroge.y));
-        //choix du pion à questionner 
-        printf("Quel pion est quesitonné ?\n Saisie sous la forme (a,b)");
-        scanf("%d %d", &(questionne.x), &(questionne.y));
-        Pion interrogeP = *jeu->plateau[interroge.x][interroge.y]; //récupère le type et la couleur du pion qui interroge
-        Pion questionneP = *jeu->plateau[questionne.x][questionne.y]; //récupère le type et la couleur du pion questionné
-        //vérifie si le pion qui interroge est l'espion
-        if (interrogeP.type == ESPION){
-            //vérifie si le pion questionné n'est pas l'espion
-            if (questionneP.type != ESPION){
-                printf("Joueur %s, vous avez interrogé un chevalier avec votre espion...\n", (pion.couleur == BLANC) ? "blanc" : "noir");
-                gagne(pion.couleur, questionneP);
-            }
-        //vérifie si le pion questionné est l'espion
-        } else if (questionneP.type == ESPION){
-            printf("Joueur %s, vous avez démasqué l'espion adverse.", (pion.couleur == BLANC) ? "blanc" : "noir"); 
-            gagne(pion.couleur, interrogeP); 
-        }   
-    } while (coup_valide(jeu, mvt));
-}
-
 int espion_dans_chateau(Mouvement *mvt, Pion *pion) {
     int arrivee_x = mvt->arrivee.x;
     int arrivee_y = mvt->arrivee.y;
@@ -325,7 +268,6 @@ void recup_saisies(Mouvement * mvt, Jeu * jeu, Pion * pion){
     } while(coup_valide(jeu, mvt));
 }
 
-
 //Fonction qui déplace les pions
 void Deplacements(Mouvement * mvt, Jeu * jeu, Pion * pion){
     int depart_x = mvt->depart.x;
@@ -351,18 +293,50 @@ void Deplacements(Mouvement * mvt, Jeu * jeu, Pion * pion){
     }
 }
 
+//Fonction qui questionne le pion designé
+void interroge(Mouvement * mvt, Jeu * jeu, Pion pion){ 
+    do {
+        Case interroge, questionne;
+        //demande du pion interrogateur
+        printf("Quel pion %s est l'interrogateur?\n Saisie sous la forme (a,b)", (pion.couleur == BLANC) ? "blanc" : "noir");
+        scanf("%d %d", &(interroge.x), &(interroge.y));
+        //choix du pion à questionner 
+        printf("Quel pion est quesitonné ?\n Saisie sous la forme (a,b)");
+        scanf("%d %d", &(questionne.x), &(questionne.y));
+        Pion interrogeP = *jeu->plateau[interroge.x][interroge.y]; //récupère le type et la couleur du pion qui interroge
+        Pion questionneP = *jeu->plateau[questionne.x][questionne.y]; //récupère le type et la couleur du pion questionné
+        //vérifie si le pion qui interroge est l'espion
+        if (interrogeP.type == ESPION){
+            //vérifie si le pion questionné n'est pas l'espion
+            if (questionneP.type != ESPION){
+                printf("Joueur %s, vous avez interrogé un chevalier avec votre espion...\n", (pion.couleur == BLANC) ? "blanc" : "noir");
+                gagne(pion.couleur, questionneP);
+            }
+        //vérifie si le pion questionné est l'espion
+        } else if (questionneP.type == ESPION){
+            printf("Joueur %s, vous avez démasqué l'espion adverse.", (pion.couleur == BLANC) ? "blanc" : "noir"); 
+            gagne(pion.couleur, interrogeP); 
+        }   
+    } while (coup_valide(jeu, mvt));
+}
+
+void gagne(Couleur couleur, Pion pion){
+    //Fonction qui donne la phrase lorsqu'un joueur gagne
+    printf("Le gagnant est le joueur %s : BRAVO !", (pion.couleur == BLANC) ? "blanc" : "noir");
+}
 
 int main() {
-    Jeu jeu;
-    Mouvement mvt;
-    Pion pion;
+     Jeu jeu;
+     Mouvement mvt;
+     Pion pion;
 
     // Initialisation du plateau
+    printf("Initialisation du plateau...\n");
     initPlateau(&jeu);
+    
     // Affichage du plateau
     printf("Affichage du plateau :\n");
     afficherPlateau(&jeu);
-    
 
     while (1){
         recup_saisies(&mvt, &jeu, &pion);
