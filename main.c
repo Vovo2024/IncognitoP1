@@ -175,7 +175,7 @@ int coup_valide(Jeu * jeu, Mouvement * mvt) {
     return 1;
 }
 
-// Fonction pour tester le type de chaque pion dans le plateau
+/*// Fonction pour tester le type de chaque pion dans le plateau
 void testerPlateau(Jeu *jeu) {
     for (int i = 0; i < TAILLE; i++) {
         for (int j = 0; j < TAILLE; j++) {
@@ -211,9 +211,9 @@ void testerPlateau(Jeu *jeu) {
             }
         }
     }
-}
+}*/
 
-void afficherDetailsPions(Jeu* jeu) {
+/*void afficherDetailsPions(Jeu* jeu) {
     for (int i = 0; i < TAILLE; i++) {
         for (int j = 0; j < TAILLE; j++) {
             printf("Case (%d, %d) : ", i, j);
@@ -234,9 +234,9 @@ void afficherDetailsPions(Jeu* jeu) {
             }
         }
     }
-}
+}*/
 
-int espionEntreDansChateau(Mouvement *mvt, Pion *pion) {
+int espion_dans_chateau(Mouvement *mvt, Pion *pion) {
     int arrivee_x = mvt->arrivee.x;
     int arrivee_y = mvt->arrivee.y;
 
@@ -287,7 +287,7 @@ void Deplacements(Mouvement * mvt, Jeu * jeu, Pion * pion){
                 (arrivee_x != arrivee_y)) {
                     gagne(pion->couleur, *pion);
         }
-        else if (espionEntreDansChateau(mvt, jeu->plateau[arrivee_x][arrivee_y])) {
+        else if (espion_dans_chateau(mvt, jeu->plateau[arrivee_x][arrivee_y])) {
             gagne(pion->couleur, *pion);  // Appeler la fonction pour annoncer le gagnant
         }
     }
@@ -342,11 +342,13 @@ int main() {
         recup_saisies(&mvt, &jeu, &pion);
         if (coup_valide(&jeu, &mvt)){
              Deplacements(&mvt, &jeu, &pion);
+             afficherPlateau(&jeu);
+             jeu.joueur = (jeu.joueur == BLANC) ? NOIR : BLANC;
+
         } else {
             printf("Position non licite, veuillez réessayer.");
             continue;
         }
-        jeu.joueur = (jeu.joueur == BLANC) ? NOIR : BLANC;
     }
     return 0;
 }
