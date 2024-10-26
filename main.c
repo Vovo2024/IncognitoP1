@@ -32,7 +32,11 @@ typedef struct _mouvement {
 }Mouvement;
 
 //----------Prototypes des fonctions----------//
-
+void gagne(Couleur couleur, Pion pion);
+void interroge(Mouvement *mvt, Jeu *jeu, Pion pion);
+void initPlateau(Jeu *jeu);
+int coup_valide(Jeu *jeu, Mouvement *mvt);
+void Deplacements(Mouvement *mvt, Jeu *jeu, Pion *pion);
 
 void initPlateau(Jeu  *jeu){
     srand(time(NULL));
@@ -118,7 +122,7 @@ void afficherPlateau(Jeu *jeu){
 }
 
 
-int coup_valide(Jeu *jeu, Mouvement *mvt) {
+int coup_valide(Jeu * jeu, Mouvement * mvt) {
     Case depart = mvt->depart;
     Case arrivee = mvt->arrivee;
 
@@ -236,15 +240,15 @@ int espionEntreDansChateau(Mouvement *mvt, Pion *pion) {
     int arrivee_x = mvt->arrivee.x;
     int arrivee_y = mvt->arrivee.y;
 
-    // Vérifiez si le pion est un espion
+    //vérifiez si le pion est un espion
     if (pion->type == ESPION) {
-        // Vérifiez si l'espion arrive dans le château adverse
-        if ((arrivee_x == 0 && arrivee_y == 4) ||  // Château blanc
-            (arrivee_x == 4 && arrivee_y == 0)) { // Château noir
-            return 1;  // Victoire
+        //vérifiez si l'espion arrive dans le château adverse
+        if ((arrivee_x == 0 && arrivee_y == 4) ||  //château blanc
+            (arrivee_x == 4 && arrivee_y == 0)) { //château noir
+            return 1;
         }
     }
-    return 0;  // Pas de victoire
+    return 0;
 }
 
 //Fonction qui récupère les saisies de l'utilisateur pour déplacer un pion ou l'interroger
@@ -261,7 +265,7 @@ void recup_saisies(Mouvement * mvt, Jeu * jeu, Pion * pion){
             else if (c == 'i'){
                 interroge(mvt, jeu, *pion);
             }
-    } while(coup_valide(&jeu, mvt));
+    } while(coup_valide(jeu, mvt));
 }
 
 //Fonction qui déplace les pions
@@ -270,7 +274,7 @@ void Deplacements(Mouvement * mvt, Jeu * jeu, Pion * pion){
     int depart_y = mvt->depart.y;
     int arrivee_x = mvt->arrivee.x;
     int arrivee_y = mvt->arrivee.y;
-    if (coup_valide){
+    if (coup_valide(jeu, mvt)){
         //la valeur d'arrivée devient celle de départ -> le pion est déplacé, et la valeur de départ est réinitialisée à NULL
         if (jeu->plateau[depart_x][depart_y] != NULL && (jeu->plateau[depart_x][depart_y]->couleur == BLANC || jeu->plateau[depart_x][depart_y]->couleur == NOIR)) {
             jeu->plateau[arrivee_x][arrivee_y] = jeu->plateau[depart_x][depart_y];
@@ -281,10 +285,10 @@ void Deplacements(Mouvement * mvt, Jeu * jeu, Pion * pion){
                 (arrivee_x == 0 || arrivee_x == 4) && 
                 (arrivee_y == 0 || arrivee_y == 4) && 
                 (arrivee_x != arrivee_y)) {
-                    gagne(&(pion->couleur), *pion);
+                    gagne(pion->couleur, *pion);
         }
-        else if (espionEntreDansChateau(mvt, &jeu->plateau[arrivee_x][arrivee_y])) {
-            gagne(&(pion->couleur), *pion);  // Appeler la fonction pour annoncer le gagnant
+        else if (espionEntreDansChateau(mvt, jeu->plateau[arrivee_x][arrivee_y])) {
+            gagne(pion->couleur, *pion);  // Appeler la fonction pour annoncer le gagnant
         }
     }
 }
@@ -313,7 +317,7 @@ void interroge(Mouvement * mvt, Jeu * jeu, Pion pion){
             printf("Joueur %s, vous avez démasqué l'espion adverse.", (pion.couleur == BLANC) ? "blanc" : "noir"); 
             gagne(pion.couleur, interrogeP); 
         }   
-    } while (coup_valide);
+    } while (coup_valide(jeu, mvt));
 }
 
 void gagne(Couleur couleur, Pion pion){
@@ -325,8 +329,7 @@ int main() {
      Jeu jeu;
      Mouvement mvt;
      Pion pion;
-     Pion pion_noir = {CHEVALIER, NOIR};
-     Pion pion_blanc = {CHEVALIER, BLANC};
+
     // Initialisation du plateau
     printf("Initialisation du plateau...\n");
     initPlateau(&jeu);
@@ -336,7 +339,6 @@ int main() {
     afficherPlateau(&jeu);
 
     while (1){
-        afficherPlateau(&jeu);
         recup_saisies(&mvt, &jeu, &pion);
         if (coup_valide(&jeu, &mvt)){
              Deplacements(&mvt, &jeu, &pion);
