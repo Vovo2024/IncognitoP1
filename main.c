@@ -67,8 +67,11 @@ void initPlateau(Jeu  *jeu){
         }
     }
     
+    jeu->plateau[i_espion_blanc][j_espion_blanc] = (Pion *)malloc(sizeof(Pion));
     jeu->plateau[i_espion_blanc][j_espion_blanc]->type = ESPION;
     jeu->plateau[i_espion_blanc][j_espion_blanc]->couleur = BLANC;
+
+    jeu->plateau[i_espion_noir][j_espion_noir] = (Pion *)malloc(sizeof(Pion));
     jeu->plateau[i_espion_noir][j_espion_noir]->type = ESPION;
     jeu->plateau[i_espion_noir][j_espion_noir]->couleur = NOIR;
 
@@ -81,8 +84,15 @@ void initPlateau(Jeu  *jeu){
     if (jeu->plateau[TAILLE - 1][0] == NULL) {
         jeu->plateau[TAILLE - 1][0] = (Pion*)malloc(sizeof(Pion));
     }
-    jeu->plateau[0][TAILLE-1] = NULL;
-    jeu->plateau[TAILLE-1][0] = NULL;
+    /*    
+    jeu->plateau[0][TAILLE - 1] = (Pion *)malloc(sizeof(Pion));
+    jeu->plateau[0][TAILLE - 1]->type = CHATEAU;
+    jeu->plateau[0][TAILLE - 1]->couleur = BLANC;
+
+    jeu->plateau[TAILLE - 1][0] = (Pion *)malloc(sizeof(Pion));
+    jeu->plateau[TAILLE - 1][0]->type = CHATEAU;
+    jeu->plateau[TAILLE - 1][0]->couleur = NOIR;
+    */
 }
 
 void afficherPlateau(Jeu *jeu){
@@ -107,7 +117,6 @@ void afficherPlateau(Jeu *jeu){
     }
 }
 
-//int chacun_son_tour()
 
 int coup_valide(Jeu *jeu, Mouvement *mvt) {
     Case depart = mvt->depart;
@@ -239,24 +248,24 @@ int espionEntreDansChateau(Mouvement *mvt, Pion *pion) {
 }
 
 //Fonction qui récupère les saisies de l'utilisateur pour déplacer un pion ou l'interroger
-void recup_saisies(Mouvement * mvt, Jeu * jeu, Pion pion){
+void recup_saisies(Mouvement * mvt, Jeu * jeu, Pion * pion){
     char c;
     do {
-            printf("Joueur %s, voulez vous faire un déplacement ou une interrogation? ('d' ou 'i')",  (pion.couleur == BLANC) ? "blanc" : "noir");
+            printf("Joueur %s, voulez vous faire un déplacement ou une interrogation? ('d' ou 'i')",  (pion->couleur == BLANC) ? "blanc" : "noir");
             scanf(" %c", &c);
             if (c == 'd'){
                 //récupère les données de case de départ et d'arrivée
-                printf("Quel dépplacement joueur %s ?\n Saisie sous la forme (a,b) --> (c,d)",  (pion.couleur == BLANC) ? "blanc" : "noir");
+                printf("Quel dépplacement joueur %s ?\n Saisie sous la forme (a,b) --> (c,d)",  (pion->couleur == BLANC) ? "blanc" : "noir");
                 scanf("%d %d %d %d", &(mvt->depart.x), &(mvt->depart.y), &(mvt->arrivee.x), &(mvt->arrivee.y));
             } 
             else if (c == 'i'){
-                interroge(mvt, jeu, pion);
+                interroge(mvt, jeu, *pion);
             }
-    } while(coup_valide);
+    } while(coup_valide(&jeu, mvt));
 }
 
 //Fonction qui déplace les pions
-void Deplacements(Mouvement * mvt, Jeu * jeu, Pion pion){
+void Deplacements(Mouvement * mvt, Jeu * jeu, Pion * pion){
     int depart_x = mvt->depart.x;
     int depart_y = mvt->depart.y;
     int arrivee_x = mvt->arrivee.x;
@@ -272,16 +281,16 @@ void Deplacements(Mouvement * mvt, Jeu * jeu, Pion pion){
                 (arrivee_x == 0 || arrivee_x == 4) && 
                 (arrivee_y == 0 || arrivee_y == 4) && 
                 (arrivee_x != arrivee_y)) {
-                    gagne(pion.couleur, pion);
+                    gagne(&(pion->couleur), *pion);
         }
         else if (espionEntreDansChateau(mvt, &jeu->plateau[arrivee_x][arrivee_y])) {
-            gagne(pion.couleur, pion);  // Appeler la fonction pour annoncer le gagnant
+            gagne(&(pion->couleur), *pion);  // Appeler la fonction pour annoncer le gagnant
         }
     }
 }
 
 //Fonction qui questionne le pion designé
-void interroge(Mouvement * mvt, Jeu * jeu, Pion  pion){ 
+void interroge(Mouvement * mvt, Jeu * jeu, Pion pion){ 
     do {
         Case interroge, questionne;
         //demande du pion interrogateur
@@ -315,6 +324,7 @@ void gagne(Couleur couleur, Pion pion){
 int main() {
      Jeu jeu;
      Mouvement mvt;
+     Pion pion;
      Pion pion_noir = {CHEVALIER, NOIR};
      Pion pion_blanc = {CHEVALIER, BLANC};
     // Initialisation du plateau
@@ -327,9 +337,9 @@ int main() {
 
     while (1){
         afficherPlateau(&jeu);
-        recup_saisies(&mvt, &jeu, pion.couleur);
+        recup_saisies(&mvt, &jeu, &pion);
         if (coup_valide(&jeu, &mvt)){
-             Deplacements(&mvt, &jeu, pion.couleur);
+             Deplacements(&mvt, &jeu, &pion);
         } else {
             printf("Position non licite, veuillez réessayer.");
             continue;
